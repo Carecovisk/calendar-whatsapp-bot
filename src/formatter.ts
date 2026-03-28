@@ -1,13 +1,13 @@
 import { CalendarEvent } from "./calendar";
 
-const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAYS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
 ];
 
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString("en-US", {
+  return date.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -15,22 +15,22 @@ function formatTime(date: Date): string {
 }
 
 function formatDateHeader(date: Date): string {
-  return `${DAYS[date.getDay()]}, ${MONTHS[date.getMonth()]} ${date.getDate()}`;
+  return `${DAYS[date.getDay()]}, ${date.getDate()} de ${MONTHS[date.getMonth()]}`;
 }
 
 export function formatDailyDigest(events: CalendarEvent[]): string {
   const today = new Date();
-  const header = `📅 *Schedule for ${formatDateHeader(today)}*\n`;
+  const header = `📅 *Agenda de ${formatDateHeader(today)}*\n`;
 
   if (events.length === 0) {
-    return `${header}\n✅ No events scheduled for today. Enjoy your free day! 🎉`;
+    return `${header}\n✅ Nenhum evento agendado para hoje. Aproveite o dia livre! 🎉`;
   }
 
   const lines: string[] = [header];
 
   for (const event of events) {
     if (event.isAllDay) {
-      lines.push(`🗓️ *${event.title}* _(all day)_`);
+      lines.push(`🗓️ *${event.title}* _(dia todo)_`);
     } else {
       const timeRange = `${formatTime(event.start)} – ${formatTime(event.end)}`;
       lines.push(`🕐 *${timeRange}*  »  ${event.title}`);
@@ -48,6 +48,6 @@ export function formatDailyDigest(events: CalendarEvent[]): string {
     }
   }
 
-  lines.push(`\nHave a productive day! 🚀`);
+  lines.push(`\nTenha um dia produtivo! 🚀`);
   return lines.join("\n");
 }
