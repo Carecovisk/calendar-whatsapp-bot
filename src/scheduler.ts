@@ -1,26 +1,26 @@
 import cron from "node-cron";
-import { fetchTodayEvents } from "./calendar";
-import { formatDailyDigest } from "./formatter";
+import { fetchRemainingWeekEvents } from "./calendar";
+import { formatWeeklyDigest } from "./formatter";
 import { broadcastMessage } from "./whatsapp";
 import { config } from "./config";
 import { logger } from "./logger";
 
-export async function runDailyDigest(): Promise<void> {
-  logger.info("Running daily calendar digest...");
+export async function runWeeklyDigest(): Promise<void> {
+  logger.info("Running weekly calendar digest...");
 
   try {
-    const events = await fetchTodayEvents();
-    const message = formatDailyDigest(events);
+    const events = await fetchRemainingWeekEvents();
+    const message = formatWeeklyDigest(events);
 
     logger.debug({ message }, "Formatted message");
     await broadcastMessage(config.recipients, message);
 
     logger.info(
       { recipientCount: config.recipients.length, eventCount: events.length },
-      "Daily digest sent successfully"
+      "Weekly digest sent successfully"
     );
   } catch (error) {
-    logger.error({ error }, "Failed to run daily digest");
+    logger.error({ error }, "Failed to run weekly digest");
   }
 }
 
@@ -34,7 +34,7 @@ export function startScheduler(): void {
   logger.info({ cronSchedule, timezone }, "Scheduler started");
 
   cron.schedule(cronSchedule, () => {
-    logger.info("Cron triggered — running daily digest");
-    runDailyDigest();
+    logger.info("Cron triggered — running weekly digest");
+    runWeeklyDigest();
   }, { timezone });
 }

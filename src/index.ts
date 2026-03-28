@@ -1,5 +1,5 @@
 import { initWhatsApp } from "./whatsapp";
-import { startScheduler, runDailyDigest } from "./scheduler";
+import { startScheduler, runWeeklyDigest } from "./scheduler";
 import { logger } from "./logger";
 
 async function main() {
@@ -11,7 +11,7 @@ async function main() {
   // 2. Optionally run once immediately on startup (useful for testing)
   if (process.argv.includes("--run-now")) {
     logger.info("--run-now flag detected, sending digest immediately");
-    await runDailyDigest();
+    await runWeeklyDigest();
   }
 
   // 3. Start the cron scheduler

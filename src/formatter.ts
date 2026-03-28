@@ -1,5 +1,11 @@
 import { CalendarEvent } from "./calendar";
 
+function isSameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+}
+
 const DAYS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 const MONTHS = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -49,5 +55,46 @@ export function formatDailyDigest(events: CalendarEvent[]): string {
   }
 
   lines.push(`\nTenha um dia produtivo! 🚀`);
+  return lines.join("\n");
+}
+
+export function formatWeeklyDigest(events: CalendarEvent[]): string {
+  const today = new Date();
+  const header = `📅 *Agenda da semana — ${formatDateHeader(today)}*\n`;
+
+  if (events.length === 0) {
+    return `${header}\n✅ Nenhum evento restante esta semana. Aproveite! 🎉`;
+  }
+
+  const lines: string[] = [header];
+
+  let lastDate: Date | null = null;
+
+  for (const event of events) {
+    if (!lastDate || !isSameDay(lastDate, event.start)) {
+      if (lastDate) lines.push("");
+      lines.push(`*${formatDateHeader(event.start)}*`);
+      lastDate = event.start;
+    }
+
+    if (event.isAllDay) {
+      lines.push(`  🗓️ *${event.title}* _(dia todo)_`);
+    } else {
+      const timeRange = `${formatTime(event.start)} – ${formatTime(event.end)}`;
+      lines.push(`  🕐 *${timeRange}*  »  ${event.title}`);
+    }
+
+    if (event.location) {
+      lines.push(`     📍 ${event.location}`);
+    }
+
+    if (event.description) {
+      const desc = event.description.replace(/\n+/g, " ").trim();
+      const truncated = desc.length > 100 ? desc.slice(0, 97) + "..." : desc;
+      lines.push(`     📝 ${truncated}`);
+    }
+  }
+
+  lines.push(`\nBoa semana! 🚀`);
   return lines.join("\n");
 }
