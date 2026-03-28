@@ -30,6 +30,7 @@ Optional:
 - `GOOGLE_APPLICATION_CREDENTIALS` — default `./credentials.json`
 - `WA_AUTH_FOLDER` — default `./auth_info`
 - `LOG_LEVEL` — default `info`
+- `WEEKS_AHEAD` — number of weeks to fetch from Google Calendar (default `1`, current week only)
 
 `credentials.json` must be a Google Service Account key with `calendar.readonly` scope, and the service account must be granted access to the target calendar.
 
@@ -37,11 +38,11 @@ Optional:
 
 The bot has a linear startup sequence in `index.ts`:
 1. `initWhatsApp()` — connects to WhatsApp via Baileys, blocks until QR is scanned and session is established
-2. Optionally runs `runDailyDigest()` immediately if `--run-now` flag is passed
+2. Optionally runs `runWeeklyDigest()` immediately if `--run-now` flag is passed
 3. `startScheduler()` — registers the cron job and keeps the process alive
 
-**Data flow for each digest run** (`scheduler.ts` → `runDailyDigest`):
-- `calendar.ts`: authenticates with Google via service account, fetches today's events as `CalendarEvent[]`
+**Data flow for each digest run** (`scheduler.ts` → `runWeeklyDigest`):
+- `calendar.ts`: authenticates with Google via service account, fetches remaining events across `WEEKS_AHEAD` weeks as `CalendarEvent[]`
 - `formatter.ts`: formats the event list into a WhatsApp-formatted string (uses `*bold*` and `_italic_` markdown)
 - `whatsapp.ts`: broadcasts the message to all recipients via `Promise.allSettled` (partial failures are logged, not thrown)
 

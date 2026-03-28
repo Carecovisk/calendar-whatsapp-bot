@@ -18,4 +18,5 @@ export const config = {
     .filter(Boolean),
   waAuthFolder: process.env.WA_AUTH_FOLDER || "./auth_info",
   logLevel: process.env.LOG_LEVEL || "info",
+  weeksAhead: Math.max(1, parseInt(process.env.WEEKS_AHEAD || "1", 10)),
 } as const;

@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { fetchRemainingWeekEvents } from "./calendar";
+import { fetchEventsByWeek } from "./calendar";
 import { formatWeeklyDigest } from "./formatter";
 import { broadcastMessage } from "./whatsapp";
 import { config } from "./config";
@@ -9,14 +9,17 @@ export async function runWeeklyDigest(): Promise<void> {
   logger.info("Running weekly calendar digest...");
 
   try {
-    const events = await fetchRemainingWeekEvents();
-    const message = formatWeeklyDigest(events);
+    const weekGroups = await fetchEventsByWeek();
 
-    logger.debug({ message }, "Formatted message");
-    await broadcastMessage(config.recipients, message);
+    for (const { weekStart, weekEnd, events } of weekGroups) {
+      const message = formatWeeklyDigest(events, weekStart, weekEnd);
+      logger.debug({ weekStart, weekEnd, eventCount: events.length }, "Sending week digest");
+      await broadcastMessage(config.recipients, message);
+    }
 
+    const totalEvents = weekGroups.reduce((sum, g) => sum + g.events.length, 0);
     logger.info(
-      { recipientCount: config.recipients.length, eventCount: events.length },
+      { recipientCount: config.recipients.length, weeks: weekGroups.length, totalEvents },
       "Weekly digest sent successfully"
     );
   } catch (error) {
