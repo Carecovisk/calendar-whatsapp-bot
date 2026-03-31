@@ -71,31 +71,54 @@ function mapEvent(item: any): CalendarEvent {
   };
 }
 
+async function fetchEventsForCalendar(
+  calendarId: string,
+  calendar: ReturnType<typeof google.calendar>,
+  timeMin: string,
+  timeMax: string
+): Promise<CalendarEvent[]> {
+  logger.info({ calendarId }, "Fetching events from calendar");
+  const response = await calendar.events.list({
+    calendarId,
+    timeMin,
+    timeMax,
+    singleEvents: true,
+    orderBy: "startTime",
+  });
+  const items = response.data.items ?? [];
+  logger.info({ calendarId, count: items.length }, "Events fetched");
+  return items.map(mapEvent);
+}
+
 export async function fetchEventsByWeek(): Promise<WeekGroup[]> {
   const auth = await getAuthClient();
-  const calendar = google.calendar({ version: "v3", auth: auth as any });
+  const calendarClient = google.calendar({ version: "v3", auth: auth as any });
 
   const now = new Date();
   const weekGroups = getWeekGroups(config.weeksAhead);
   const endDate = weekGroups[weekGroups.length - 1].weekEnd;
 
   logger.info(
-    { calendarId: config.calendarId, weeksAhead: config.weeksAhead, endDate },
+    { calendarIds: config.calendarIds, weeksAhead: config.weeksAhead, endDate },
     "Fetching upcoming events"
   );
 
-  const response = await calendar.events.list({
-    calendarId: config.calendarId,
-    timeMin: now.toISOString(),
-    timeMax: endDate.toISOString(),
-    singleEvents: true,
-    orderBy: "startTime",
-  });
+  const results = await Promise.allSettled(
+    config.calendarIds.map((id) =>
+      fetchEventsForCalendar(id, calendarClient, now.toISOString(), endDate.toISOString())
+    )
+  );
 
-  const items = response.data.items ?? [];
-  logger.info({ count: items.length }, "Events fetched from Google Calendar");
+  const events: CalendarEvent[] = [];
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      events.push(...result.value);
+    } else {
+      logger.error({ err: result.reason }, "Failed to fetch events from a calendar");
+    }
+  }
 
-  const events = items.map(mapEvent);
+  events.sort((a, b) => a.start.getTime() - b.start.getTime());
 
   return weekGroups.map(({ weekStart, weekEnd }) => ({
     weekStart,

@@ -10,7 +10,10 @@ function requireEnv(key: string): string {
 export const config = {
   cronSchedule: process.env.CRON_SCHEDULE || "0 7 * * *",
   timezone: process.env.TZ || "America/Sao_Paulo",
-  calendarId: requireEnv("CALENDAR_ID"),
+  calendarIds: requireEnv("CALENDAR_ID")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
   googleCredentialsPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || "./credentials.json",
   recipients: requireEnv("RECIPIENTS")
     .split(",")

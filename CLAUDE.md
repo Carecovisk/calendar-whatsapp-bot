@@ -21,7 +21,7 @@ No test suite is configured.
 ## Environment
 
 Required `.env` variables:
-- `CALENDAR_ID` — Google Calendar ID (e.g. `user@gmail.com`)
+- `CALENDAR_ID` — comma-separated Google Calendar IDs (e.g. `user@gmail.com,team@group.calendar.google.com`)
 - `RECIPIENTS` — comma-separated WhatsApp numbers with country code (e.g. `5511999999999,5521888888888`)
 
 Optional:
