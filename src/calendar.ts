@@ -9,6 +9,8 @@ export interface CalendarEvent {
   location?: string;
   description?: string;
   isAllDay: boolean;
+  calendarId: string;
+  calendarName: string;
 }
 
 export interface WeekGroup {
@@ -50,7 +52,7 @@ export function getWeekGroups(weeksAhead: number): { weekStart: Date; weekEnd: D
   return groups;
 }
 
-function mapEvent(item: any): CalendarEvent {
+function mapEvent(item: any, calendarId: string, calendarName: string): CalendarEvent {
   const isAllDay = Boolean(item.start?.date && !item.start?.dateTime);
 
   const start = isAllDay
@@ -68,6 +70,8 @@ function mapEvent(item: any): CalendarEvent {
     location: item.location ?? undefined,
     description: item.description ?? undefined,
     isAllDay,
+    calendarId,
+    calendarName,
   };
 }
 
@@ -78,16 +82,20 @@ async function fetchEventsForCalendar(
   timeMax: string
 ): Promise<CalendarEvent[]> {
   logger.info({ calendarId }, "Fetching events from calendar");
-  const response = await calendar.events.list({
-    calendarId,
-    timeMin,
-    timeMax,
-    singleEvents: true,
-    orderBy: "startTime",
-  });
-  const items = response.data.items ?? [];
-  logger.info({ calendarId, count: items.length }, "Events fetched");
-  return items.map(mapEvent);
+  const [metaResponse, eventsResponse] = await Promise.all([
+    calendar.calendars.get({ calendarId }),
+    calendar.events.list({
+      calendarId,
+      timeMin,
+      timeMax,
+      singleEvents: true,
+      orderBy: "startTime",
+    }),
+  ]);
+  const calendarName = metaResponse.data.summary ?? calendarId;
+  const items = eventsResponse.data.items ?? [];
+  logger.info({ calendarId, calendarName, count: items.length }, "Events fetched");
+  return items.map((item) => mapEvent(item, calendarId, calendarName));
 }
 
 export async function fetchEventsByWeek(): Promise<WeekGroup[]> {

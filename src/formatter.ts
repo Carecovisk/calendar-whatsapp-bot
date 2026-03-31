@@ -1,4 +1,5 @@
 import { CalendarEvent } from "./calendar";
+import { config } from "./config";
 
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() &&
@@ -51,11 +52,13 @@ export function formatWeeklyDigest(events: CalendarEvent[], weekStart: Date, wee
       lastDate = event.start;
     }
 
+    const calendarLabel = config.calendarIds.length > 1 ? ` _[${event.calendarName}]_` : "";
+
     if (event.isAllDay) {
-      lines.push(`  🗓️ *${event.title}* _(dia todo)_`);
+      lines.push(`  🗓️ *${event.title}* _(dia todo)_${calendarLabel}`);
     } else {
       const timeRange = `${formatTime(event.start)} – ${formatTime(event.end)}`;
-      lines.push(`  🕐 *${timeRange}*  »  ${event.title}`);
+      lines.push(`  🕐 *${timeRange}*  »  ${event.title}${calendarLabel}`);
     }
 
     if (event.location) {
